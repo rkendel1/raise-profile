@@ -192,6 +192,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);outline:none;
 .ledger{width:100%;border-collapse:collapse;min-width:720px}
 .ledger th,.ledger td{padding:8px;border-top:1px solid var(--line);text-align:left}
 .ledger th{font:500 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:0}
+.ledger td:last-child input{min-width:200px}
 .ledger td input{padding:5px 7px;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .ledger tr.cur td{background:var(--accent-soft)}
 .ledger td.wk{font:500 .82rem var(--mono);white-space:nowrap}
@@ -223,6 +224,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);outline:none;
   .scorerow{grid-template-columns:minmax(0,1fr) 40px}
   .scorerow input[type=range]{grid-column:1/-1;grid-row:2}
   .jobpick{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .task{grid-template-columns:24px minmax(0,1fr)}
+  .task .min{grid-column:2;grid-row:2}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -255,11 +258,11 @@ const JOBS = {
 };
 const JOB_KEYS = Object.keys(JOBS);
 const PILLARS = [
-  {k:"expertise",n:"Expertise",q:"Do you actually know this better than anyone?",fix:"Show your thinking. Lean on process posts that walk through how you solve the problem."},
+  {k:"expertise",job:"process",n:"Expertise",q:"Do you actually know this better than anyone?",fix:"Show your thinking. Lean on process posts that walk through how you solve the problem."},
   {k:"visibility",n:"Visibility",q:"Do I see you often enough to remember you?",fix:"Frequency is the fix. Hit every post day for 30 days and spend the 12 minutes engaging after each post."},
-  {k:"association",n:"Association",q:"What problem do I connect to your name?",fix:"Lock the one-sentence position and make every post about that one problem. Lead with objections."},
-  {k:"voice",n:"Voice",q:"Does this sound like an actual person I'd trust?",fix:"Fill the voice file and kill list. Draft from voice notes, never from a blank page. Add opinion posts."},
-  {k:"proof",n:"Proof",q:"Has someone like me gotten a result from you?",fix:"Run client stories with real numbers. Put your best result in the Featured section and About."}
+  {k:"association",job:"objections",n:"Association",q:"What problem do I connect to your name?",fix:"Lock the one-sentence position and make every post about that one problem. Lead with objections."},
+  {k:"voice",job:"opinions",n:"Voice",q:"Does this sound like an actual person I'd trust?",fix:"Fill the voice file and kill list. Draft from voice notes, never from a blank page. Add opinion posts."},
+  {k:"proof",job:"stories",n:"Proof",q:"Has someone like me gotten a result from you?",fix:"Run client stories with real numbers. Put your best result in the Featured section and About."}
 ];
 const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const STATUSES = ["idea","drafted","ready","posted"];
@@ -298,6 +301,9 @@ let S = blankState();
 let view = "today";
 try{ const h=(location.hash||"").slice(1); if(VIEWS.some(v=>v.id===h)) view=h; else { const r=localStorage.getItem("aos.view"); if(r&&VIEWS.some(v=>v.id===r)) view=r; } }catch(e){}
 let weekOffset = 0;
+function defaultWeekOffset(){ const startMon=mondayOf(parseKey(S.startDate)), cur=mondayOf(TODAY);
+  if(cur<startMon) return Math.round((startMon-cur)/(7*864e5));
+  return TODAY.getDay()===0?1:0; }
 let db=null, docRef=null, dirty=false, writing=false, saveTimer=null, mode="local", sample=null, downloads=null;
 
 function merge(base, inc){
@@ -308,10 +314,20 @@ function merge(base, inc){
   return out;
 }
 function setSync(t){ const el=document.getElementById("sync"); if(el) el.textContent=t; }
+function saveLocal(){ try{ localStorage.setItem("aos.state",JSON.stringify(S)); return true; }catch(e){ return false; } }
 function save(){
+  const ok=saveLocal();
+  if(mode!=="db"){ setSync(ok?"Saved in this browser":"Not saved (storage blocked)"); return; }
   dirty=true; setSync("Saving…");
   clearTimeout(saveTimer); saveTimer=setTimeout(flush,700);
 }
+function flushNow(){ if(dirty&&mode==="db"&&docRef){ clearTimeout(saveTimer); flush(); } }
+window.addEventListener("pagehide",flushNow);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") flushNow(); });
+window.addEventListener("storage",e=>{ if(e.key!=="aos.state"||!e.newValue||mode==="db") return;
+  try{ S=merge(blankState(),JSON.parse(e.newValue)); }catch(x){ return; }
+  if(document.activeElement&&document.activeElement.closest("input,textarea")) return;
+  if(!document.querySelector("#drawer .drawer")){ renderNav(); render(); } });
 async function flush(){
   if(writing){ saveTimer=setTimeout(flush,400); return; }
   const snapshot = JSON.parse(JSON.stringify(S));
@@ -407,7 +423,7 @@ function vToday(){
   <p class="sub">${rd<1?`Your 90-day run starts ${fmt(parseKey(S.startDate),{weekday:"long",month:"long",day:"numeric"})}. Knock out the setup list first so Monday is just the batch.`:"Two hours a week, spent on purpose. Tick things off as you go."}</p></div></div>
   ${runBar()}
   <div class="today-grid">
-    <div class="panel"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2>${DOW[TODAY.getDay()]}day</h2><span class="label">${done.length}/${tasks.filter(x=>x.id!=="rest").length} done</span></div>
+    <div class="panel"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2>${TODAY.toLocaleDateString(undefined,{weekday:"long"})}</h2><span class="label">${done.length}/${tasks.filter(x=>x.id!=="rest").length} done</span></div>
       ${tasks.map(x=>`<div class="task ${done.includes(x.id)?"done":""}">${x.id==="rest"?"<span></span>":`<input type="checkbox" id="tk-${x.id}" data-task="${x.id}" ${done.includes(x.id)?"checked":""}>`}
         <label for="tk-${x.id}"><div class="t">${esc(x.t)}</div>${x.d?`<div class="d">${esc(x.d)}</div>`:""}
         ${x.post?`<div class="postpreview">${jobChip(x.post.job)} <strong>${esc(x.post.hook)}</strong>${x.post.body?"\n\n"+esc(x.post.body.slice(0,400))+(x.post.body.length>400?"…":""):""}</div><div class="row" style="margin-top:8px"><button class="btn" data-copy="${x.post.id}">Copy post</button><a class="btn" href="https://www.linkedin.com/feed/" target="_blank" rel="noopener">Open LinkedIn</a><button class="btn ghost" data-markposted="${x.post.id}">Mark posted</button></div>`:""}
@@ -460,7 +476,7 @@ function vWeek(){
   return `<div class="view">
   <div class="head"><div><span class="label">${wn>=1&&wn<=13?`Run week ${wn} of 13`:"Outside the 90-day run"}</span><h1>Week of ${fmt(mon,{month:"long",day:"numeric"})}</h1>
   <p class="sub">Every post does 1 of 5 jobs. If it doesn't, it's just filling the calendar.</p></div>
-  <div class="row"><button class="btn" id="prevw" aria-label="Previous week">←</button><button class="btn" id="thisw">This week</button><button class="btn" id="nextw" aria-label="Next week">→</button></div></div>
+  <div class="row"><button class="btn" id="prevw" aria-label="Previous week">←</button><button class="btn" id="thisw">${runDay()<1?"Week 1":TODAY.getDay()===0?"Coming week":"This week"}</button><button class="btn" id="nextw" aria-label="Next week">→</button></div></div>
   <div class="panel stack"><div class="weekbar"><span class="label">Job mix this week · ${wkPosts.length} posts</span>${wkPosts.some(p=>!JOBS[p.job])?`<span class="small" style="color:var(--warn)">Some posts have no job. Give them one or cut them.</span>`:""}</div>${mixBar(wkPosts)}</div>
   <div class="board-wrap"><div class="board">
   ${days.map(d=>{const k=keyOf(d); const pd=isPostDay(d); const ps=postsOn(k);
@@ -490,7 +506,7 @@ function vWeek(){
 bind.week=m=>{
   m.querySelector("#prevw").onclick=()=>{weekOffset--;render();};
   m.querySelector("#nextw").onclick=()=>{weekOffset++;render();};
-  m.querySelector("#thisw").onclick=()=>{weekOffset=0;render();};
+  m.querySelector("#thisw").onclick=()=>{weekOffset=defaultWeekOffset();render();};
   m.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEditor(b.dataset.edit));
   m.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const p={id:uid(),date:b.dataset.add,job:"",hook:"",body:"",status:"idea"}; S.posts.push(p); save(); openEditor(p.id);});
   m.querySelectorAll("[data-pd]").forEach(c=>c.onchange=()=>{const i=+c.dataset.pd; const s=new Set(S.postDays); c.checked?s.add(i):s.delete(i); S.postDays=[...s].sort(); save(); render();});
@@ -512,6 +528,8 @@ function buildIcs(){
   if(byday){ let first=start; while(!S.postDays.includes(first.getDay())) first=addDays(first,1);
     ev("engage-"+S.startDate,keyOf(first),addMin(S.postTime,0),12,"Authority: post + 12 min engagement","Publish. Reply to every comment in the first hour. Comment on a few ICP posts.","FREQ=WEEKLY;BYDAY="+byday+";UNTIL="+keyOf(addDays(start,90)).replace(/-/g,"")+"T000000"); }
   ev("review-"+S.startDate,keyOf(addDays(start,4)),S.reviewTime,15,"Authority: Friday signal check","Read the titles of who viewed your profile and who followed. Could they buy from you? Log it in Friday signals.","FREQ=WEEKLY;BYDAY=FR;COUNT=13");
+  ev("rescore30-"+S.startDate,keyOf(addDays(start,29)),S.reviewTime,15,"Authority: re-score your audit (day 30)","Re-score the 5 parts in Audit & position. Shift the next 30 days to whatever is lowest now.");
+  ev("rescore60-"+S.startDate,keyOf(addDays(start,59)),S.reviewTime,15,"Authority: re-score your audit (day 60)","Re-score the 5 parts in Audit & position. Shift the last 30 days to whatever is lowest now.");
   ev("day90-"+S.startDate,keyOf(addDays(start,89)),"16:00",30,"Authority: day 90 review","Judge the run now, not before. Booked calls are the number that counts.");
   S.posts.filter(p=>p.date>=todayKey&&p.status!=="posted"&&!p.example).forEach(p=>ev("post-"+p.id,p.date,S.postTime,5,"Post: "+(p.hook||"Untitled").slice(0,80),postText(p)));
   L.push("END:VCALENDAR"); return L.join("\r\n");
@@ -603,7 +621,7 @@ bind.batch=m=>{
     b.disabled=true; const msg=m.querySelector("#draftmsg"); msg.textContent="Thinking… this usually takes under a minute.";
     const lp=lowestPillar();
     try{
-      const out=await sample.json(`You are drafting a founder's LinkedIn posts for the week. Write exactly ${open.length} posts from the voice notes below.\n\nRules:\n- Every post is about the one problem in the positioning sentence and does exactly one of these jobs: objections (answer a buyer objection), stories (client result with a real number from the notes), trends (take on industry news), process (how the author would fix it), opinions (pick a side).\n- Vary the jobs across the week.${lp?` The author's weakest area is ${lp.n}; lean toward posts that build it.`:""}\n- Sound like the author. Plain words, short sentences. No hashtags, emoji or em-dashes.\n- Never use: ${killWords().join("; ")}.\n- Use only facts in the notes. If a story lacks a number, write [number] as a placeholder.\n- 120–220 words each. Hook is one line under 15 words.\n\nPositioning: ${sentenceText()}\nProof they can cite: ${S.pos.proof||"(none given)"}\nHow the author talks: ${S.voice.style||"(not given)"}\nPhrases they use: ${S.voice.phrases||"(not given)"}\n\nVOICE NOTES:\n${S.notes.slice(0,12000)}\n\nReply with only a JSON array of {"job": one of "objections"|"stories"|"trends"|"process"|"opinions", "hook": string, "body": string}.`,{cache:false,onText:()=>{msg.textContent="Writing drafts…";}});
+      const out=await sample.json(`You are drafting a founder's LinkedIn posts for the week. Write exactly ${open.length} posts from the voice notes below.\n\nRules:\n- Every post is about the one problem in the positioning sentence and does exactly one of these jobs: objections (answer a buyer objection), stories (client result with a real number from the notes), trends (take on industry news), process (how the author would fix it), opinions (pick a side).\n- Vary the jobs across the week.${lp&&lp.job?` The author's weakest area is ${lp.n}, so make at least 2 of the posts ${JOBS[lp.job].name.toLowerCase()} posts.`:""}\n- Sound like the author. Plain words, short sentences. No hashtags, emoji or em-dashes.\n- Never use: ${killWords().join("; ")}.\n- Use only facts in the notes. If a story lacks a number, write [number] as a placeholder.\n- 120–220 words each. Hook is one line under 15 words.\n\nPositioning: ${sentenceText()}\nProof they can cite: ${S.pos.proof||"(none given)"}\nHow the author talks: ${S.voice.style||"(not given)"}\nPhrases they use: ${S.voice.phrases||"(not given)"}\n\nVOICE NOTES:\n${S.notes.slice(0,12000)}\n\nReply with only a JSON array of {"job": one of "objections"|"stories"|"trends"|"process"|"opinions", "hook": string, "body": string}.`,{cache:false,onText:()=>{msg.textContent="Writing drafts…";}});
       if(!Array.isArray(out)||!out.length) throw {code:"invalid_json"};
       out.slice(0,open.length).forEach((x,i)=>S.posts.push({id:uid(),date:keyOf(open[i]),job:JOB_KEYS.includes(x.job)?x.job:"",hook:String(x.hook||"").trim(),body:String(x.body||"").trim(),status:"drafted"}));
       if(TODAY.getDay()===1) S.done[todayKey]=[...new Set([...(S.done[todayKey]||[]),"batch2"])];
@@ -699,15 +717,38 @@ function vSignals(){
     <div class="kpi star"><span class="label" style="color:var(--gold)">Booked calls</span><div class="n">${t.calls}</div><span class="small muted">The number that counts</span></div>
     <div class="kpi"><span class="label">Pipeline</span><div class="n">${money(t.pipeline)}</div><span class="small muted">Total from those calls</span></div>
   </div>
+  ${consistencyPanel()}
   <div class="panel chartbox stack"><div class="row" style="justify-content:space-between"><h3>Calls vs. impressions, by week</h3><span class="small muted">Likes stay flat while trust climbs. Don't judge before week 6.</span></div>${chart()}</div>
   <div class="panel stack"><h3>Weekly log</h3><p class="small muted">Each Friday: open LinkedIn's "Who viewed your profile" and new followers. Count only people who could buy from you.</p>
   <div class="ledger-wrap"><table class="ledger"><thead><tr><th>Week</th>${SIG.map(s=>`<th>${s.n}</th>`).join("")}<th>Note</th></tr></thead><tbody>
   ${[...Array(13)].map((_,i)=>{const w=i+1; const r=S.weeks[w]||{}; const fri=addDays(parseKey(S.startDate),i*7+4);
     return `<tr class="${w===cw?"cur":""}"><td class="wk">W${w} · ${fmt(fri)}</td>${SIG.map(s=>`<td><input type="number" min="0" inputmode="numeric" data-w="${w}" data-s="${s.k}" value="${r[s.k]??""}" aria-label="Week ${w} ${s.n}"></td>`).join("")}<td><input type="text" data-w="${w}" data-s="note" value="${esc(r.note||"")}" aria-label="Week ${w} note" placeholder="Who stood out?"></td></tr>`;}).join("")}
-  </tbody></table></div></div></div>`;
+  </tbody></table></div></div>
+  <div class="panel stack"><h3>Backup</h3><p class="small muted">Everything lives in this browser. Download a backup every few Fridays, and restore it here if you switch computers or clear your browser.</p>
+  <div class="row"><button class="btn" id="bk">Download backup</button><label class="btn" for="rs" style="cursor:pointer">Restore from backup</label><input type="file" id="rs" accept=".json,application/json" hidden><span class="small" id="bkmsg"></span></div></div>
+  </div>`;
+}
+function consistency(){
+  const start=parseKey(S.startDate), end=TODAY<addDays(start,89)?TODAY:addDays(start,89);
+  let pd=0, mons=0, batches=0;
+  for(let d=new Date(start); d<=end; d=addDays(d,1)){ if(isPostDay(d)) pd++; if(d.getDay()===1){ mons++; const k=keyOf(d); if((S.done[k]||[]).some(x=>x==="batch1"||x==="batch2")||S.posts.some(p=>p.date>=k&&p.date<keyOf(addDays(d,7))&&!p.example)) batches++; } }
+  const shipped=S.posts.filter(p=>p.status==="posted"&&p.date>=S.startDate&&p.date<=keyOf(end)).length;
+  return {pd,shipped,mons,batches};
+}
+function consistencyPanel(){
+  const c=consistency(); if(c.pd===0) return "";
+  const pct=Math.round(Math.min(1,c.shipped/c.pd)*100);
+  const bar=(n,d)=>`<div class="track" style="height:8px"><div class="fill" style="width:${d?Math.min(100,n/d*100):0}%"></div></div>`;
+  return `<div class="panel grid2"><div class="stack"><div class="row" style="justify-content:space-between"><span class="label">Posts shipped vs. post days so far</span><span class="mono">${c.shipped} / ${c.pd}</span></div>${bar(c.shipped,c.pd)}<span class="small muted">${pct>=80?"On pace. Keep going.":pct>=50?"Slipping. Visibility only builds if you show up.":"Well behind. Protect Monday's hour first."}</span></div>
+  <div class="stack"><div class="row" style="justify-content:space-between"><span class="label">Monday batches done</span><span class="mono">${c.batches} / ${c.mons}</span></div>${bar(c.batches,c.mons)}<span class="small muted">The batch is what makes the rest of the week take 12 minutes a day.</span></div></div>`;
+}
+async function downloadBackup(){
+  const txt=JSON.stringify(S,null,1), name="authority-os-backup-"+todayKey+".json";
+  if(downloads){ try{ await downloads.save({filename:name,data:txt}); toast("Backup saved"); return; }catch(e){} }
+  try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"})); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); toast("Backup downloaded"); }catch(e){ copyText(txt); }
 }
 function chart(){
-  const W=760,H=220,P={l:40,r:44,t:16,b:30}; const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const W=760,H=220,P={l:40,r:96,t:16,b:30}; const iw=W-P.l-P.r, ih=H-P.t-P.b;
   const calls=[...Array(13)].map((_,i)=>Number((S.weeks[i+1]||{}).calls)||0);
   let cum=0; const cumCalls=calls.map(c=>cum+=c);
   const imp=[...Array(13)].map((_,i)=>Number((S.weeks[i+1]||{}).impressions)||0);
@@ -715,11 +756,11 @@ function chart(){
   const x=i=>P.l+i*(iw/12);
   const yC=v=>P.t+ih-(v/maxC)*ih, yI=v=>P.t+ih-(v/maxI)*ih;
   const any=calls.some(Boolean)||imp.some(Boolean);
-  const last=cumCalls.reduce((a,v,i)=>calls.slice(0,i+1).some(Boolean)||imp[i]?i:a,-1);
+  const last=[...Array(13).keys()].reduce((a,i)=>{const w=S.weeks[i+1]||{};return SIG.some(s=>w[s.k]!==""&&w[s.k]!=null)?i:a;},-1);
   const ticks=[0,Math.round(maxC/2),maxC];
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative booked calls and weekly impressions by week">`;
   ticks.forEach(t=>{s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${yC(t)}" y2="${yC(t)}" stroke="var(--line)" stroke-width="1"/><text x="${P.l-8}" y="${yC(t)+4}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">${t}</text>`;});
-  s+=`<line x1="${x(5.857)}" x2="${x(5.857)}" y1="${P.t}" y2="${P.t+ih}" stroke="var(--warn)" stroke-dasharray="3 4" stroke-width="1"/><text x="${x(5.857)+6}" y="${P.t+12}" font-size="11" fill="var(--warn)" font-family="IBM Plex Sans, sans-serif">week 6</text>`;
+  s+=`<line x1="${x(5)}" x2="${x(5)}" y1="${P.t}" y2="${P.t+ih}" stroke="var(--warn)" stroke-dasharray="3 4" stroke-width="1"/><text x="${x(5)+6}" y="${P.t+ih-8}" font-size="11" fill="var(--warn)" font-family="IBM Plex Sans, sans-serif">week 6</text>`;
   for(let i=0;i<13;i++) s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">W${i+1}</text>`;
   if(!any){ s+=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif">Log your first Friday and the lines appear here.</text></svg>`; return s; }
   const n=Math.max(0,last);
@@ -728,10 +769,15 @@ function chart(){
   s+=`<path d="${pI}" fill="none" stroke="var(--faint)" stroke-width="2"/>`;
   s+=`<path d="${pC} L${x(n)},${P.t+ih} L${x(0)},${P.t+ih}Z" fill="var(--gold)" fill-opacity=".12"/><path d="${pC}" fill="none" stroke="var(--gold)" stroke-width="2.5"/>`;
   s+=`<circle cx="${x(n)}" cy="${yC(cumCalls[n])}" r="4.5" fill="var(--gold)"/><text x="${x(n)+8}" y="${yC(cumCalls[n])-6}" font-size="12" font-weight="600" fill="var(--gold)" font-family="IBM Plex Sans, sans-serif">${cumCalls[n]} calls</text>`;
-  s+=`<text x="${x(n)+8}" y="${yI(imp[n])+14}" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif">impressions</text>`;
+  s+=`<text x="${x(n)+8}" y="${yI(imp[n])+14}" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif">impressions (scaled)</text>`;
   return s+`</svg>`;
 }
 bind.signals=m=>{
+  m.querySelector("#bk").onclick=downloadBackup;
+  m.querySelector("#rs").onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+    r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d||!d.startDate||!Array.isArray(d.posts)) throw 0; S=merge(blankState(),d); save(); weekOffset=defaultWeekOffset(); renderNav(); render(); toast("Backup restored"); }
+      catch(x){ m.querySelector("#bkmsg").textContent="That file isn't an Authority OS backup."; } };
+    r.readAsText(f); };
   m.querySelectorAll("[data-w]").forEach(i=>{i.oninput=()=>{const w=i.dataset.w; S.weeks[w]=S.weeks[w]||{}; S.weeks[w][i.dataset.s]=i.dataset.s==="note"?i.value:(i.value===""?"":Number(i.value)); save();}; i.onchange=()=>{ if(i.dataset.s!=="note"){ const y=window.scrollY; render(); window.scrollTo(0,y);} };});
 };
 
@@ -794,7 +840,7 @@ document.addEventListener("keydown",e=>{
   if(e.target.closest("input,textarea,select")||e.metaKey||e.ctrlKey||e.altKey||document.querySelector("#drawer .drawer")) return;
   const v=VIEWS.find(v=>v.k===e.key.toUpperCase()); if(v) go(v.id);
 });
-loadLocal(); renderNav(); render(); setSync("Saved in this browser");
+loadLocal(); weekOffset=defaultWeekOffset(); renderNav(); render(); setSync("Saved in this browser");
 
 (async()=>{
   try{
@@ -809,7 +855,7 @@ loadLocal(); renderNav(); render(); setSync("Saved in this browser");
       if(!snap.exists){ if(first){ first=false; setSync("Ready"); save(); } return; }
       if(dirty||writing) return;
       if(document.activeElement&&document.activeElement.closest("input,textarea")&&!first) return;
-      S=merge(blankState(),snap.data()); first=false;
+      S=merge(blankState(),snap.data()); first=false; saveLocal(); weekOffset=defaultWeekOffset();
       setSync("Saved to your account");
       if(!document.querySelector("#drawer .drawer")){ renderNav(); render(); }
     },()=>{ mode="local"; setSync("Saved in this browser"); });

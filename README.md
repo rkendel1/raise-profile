@@ -1,5 +1,9 @@
 # Authority OS
 
+![Today view](docs/screenshots/01-today.png)
+
+**[How it works and how to track progress →](docs/GUIDE.md)** · [Test report](docs/TEST-REPORT.md)
+
 A single-page app for running the "become the authority in your industry in 2 hours a week" playbook as a 90-day program.
 
 ## What's in it
@@ -18,6 +22,10 @@ A single-page app for running the "become the authority in your industry in 2 ho
 
 Open `index.html` in a browser, or serve the repo with GitHub Pages. There's no build step and no dependencies beyond Google Fonts.
 
-Data is saved in your browser's local storage, so it stays on the device and browser you use. When the page runs as a Claude artifact, it saves to your Claude account instead and can draft posts with Claude; those two features are hidden when it runs on its own.
+Data is saved in your browser's local storage as you type, so it stays on the device and browser you use. Use **Friday signals → Backup** to move it between computers. When the page runs as a Claude artifact, it saves to your Claude account instead and can draft posts with Claude; those two features are hidden when it runs on its own.
 
 Keyboard shortcuts: T, W, B, A, P, F, V, S switch sections.
+
+## Tests
+
+`tests/e2e.py` runs the app end to end in headless Chromium with a simulated clock. Serve the repo first (`python3 -m http.server 8765`), then run `python3 tests/e2e.py`. It needs `playwright` and `icalendar`.
