@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="A 90-day operating system for building authority in 2 hours a week.">
+<title>Authority Operating System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a broadcast-desk run sheet — left rail of sections, a working surface of day columns and ledgers. */
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --sunk:#E3E8EE; --line:#CDD5DE;
+  --ink:#14202E; --muted:#5B6878; --faint:#8A96A5;
+  --accent:#1D5C63; --accent-soft:#D6E8E7; --accent-ink:#FFFFFF;
+  --gold:#B7791F; --gold-soft:#F6E7C8;
+  --warn:#B4441C; --warn-soft:#F7DED3;
+  --ok:#2F7A46;
+  --j-objections:#B4441C; --j-stories:#2F6FB0; --j-trends:#7A5AA6; --j-process:#1D5C63; --j-opinions:#14202E;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F151C; --surface:#17202A; --sunk:#1E2934; --line:#2C3946;
+  --ink:#E6ECF2; --muted:#9AA8B7; --faint:#6D7B8A;
+  --accent:#5FB3B3; --accent-soft:#1D3537; --accent-ink:#0F151C;
+  --gold:#E3A84B; --gold-soft:#3A2E17;
+  --warn:#E8805C; --warn-soft:#3B2219; --ok:#6CC08A;
+  --j-objections:#E8805C; --j-stories:#6FA8E0; --j-trends:#B39AD8; --j-process:#5FB3B3; --j-opinions:#E6ECF2;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F151C; --surface:#17202A; --sunk:#1E2934; --line:#2C3946;
+  --ink:#E6ECF2; --muted:#9AA8B7; --faint:#6D7B8A;
+  --accent:#5FB3B3; --accent-soft:#1D3537; --accent-ink:#0F151C;
+  --gold:#E3A84B; --gold-soft:#3A2E17;
+  --warn:#E8805C; --warn-soft:#3B2219; --ok:#6CC08A;
+  --j-objections:#E8805C; --j-stories:#6FA8E0; --j-trends:#B39AD8; --j-process:#5FB3B3; --j-opinions:#E6ECF2;
+  color-scheme:dark}
+
+html,body{height:100%}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);margin:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(1.6rem,3.4vw,2.2rem);font-weight:800;line-height:1.1}
+h2{font-size:1.35rem;font-weight:700}
+h3{font-size:1.02rem;font-weight:700}
+p{margin:0}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.label{font:500 .7rem/1.2 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100%}
+.rail{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;height:100vh;padding:24px 16px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:20px;background:var(--bg)}
+.brand{display:flex;flex-direction:column;gap:4px}
+.brand b{font:800 1.15rem/1.1 var(--display)}
+.brand .runline{font:500 .72rem var(--mono);color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:var(--r);font-weight:500;color:var(--muted)}
+.nav button:hover{background:var(--sunk);color:var(--ink)}
+.nav button[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
+.nav button:focus-visible{outline:2px solid var(--accent)}
+.nav .k{font:500 .7rem var(--mono);color:var(--faint)}
+.syncstate{margin-top:auto;font:500 .72rem var(--mono);color:var(--faint)}
+
+main{padding-block:28px 64px;padding-inline:32px;min-width:0;max-width:1180px}
+.view{display:flex;flex-direction:column;gap:24px}
+.head{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;align-items:end}
+.head .sub{color:var(--muted);max-width:62ch;margin-top:6px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.btn{cursor:pointer;border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:var(--r);font-weight:500;font-size:.88rem}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+
+input[type=text],input[type=date],input[type=time],input[type=number],textarea,select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px}
+textarea{resize:vertical;min-height:84px;line-height:1.5}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);outline:none;background:var(--surface)}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+
+/* run progress */
+.run{display:flex;flex-direction:column;gap:10px}
+.track{position:relative;height:14px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.track .fill{position:absolute;inset:0 auto 0 0;background:var(--accent)}
+.track .w6{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--warn)}
+.runlegend{display:flex;justify-content:space-between;font:500 .72rem var(--mono);color:var(--muted)}
+.runlegend .q{color:var(--warn)}
+
+/* today */
+.today-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.task{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.task:first-of-type{border-top:0}
+.task input{width:18px;height:18px;margin-top:3px;accent-color:var(--accent)}
+.task .t{font-weight:600}
+.task .d{color:var(--muted);font-size:.88rem}
+.task .min{font:500 .8rem var(--mono);color:var(--accent);white-space:nowrap}
+.task.done .t{text-decoration:line-through;color:var(--faint)}
+.postpreview{margin-top:8px;padding:10px 12px;border-radius:var(--r);background:var(--bg);font-size:.88rem;white-space:pre-wrap}
+.setup li{display:flex;gap:10px;align-items:center;padding:6px 0}
+.setup ul{list-style:none;margin:0;padding:0}
+.dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--faint);flex:none}
+.dot.on{background:var(--ok);border-color:var(--ok)}
+
+/* jobs */
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 .72rem var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip i{width:8px;height:8px;border-radius:2px;background:currentColor}
+.chip.example{background:var(--gold-soft);color:var(--gold)}
+.job-objections{color:var(--j-objections)} .job-stories{color:var(--j-stories)} .job-trends{color:var(--j-trends)} .job-process{color:var(--j-process)} .job-opinions{color:var(--j-opinions)}
+.job-none{color:var(--warn)}
+
+/* week board */
+.weekbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.board-wrap{overflow-x:auto;padding-bottom:4px}
+.board{display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));gap:8px;min-width:1080px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;min-height:240px}
+.day.is-today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.day.off{background:transparent;border-style:dashed}
+.day .dh{display:flex;justify-content:space-between;align-items:baseline}
+.day .dh b{font:700 .95rem var(--display)}
+.day .dh span{font:500 .72rem var(--mono);color:var(--muted)}
+.block{font-size:.78rem;padding:6px 8px;border-radius:4px;background:var(--accent-soft);color:var(--accent);font-weight:500}
+.block.review{background:var(--gold-soft);color:var(--gold)}
+.pcard{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid var(--line);border-radius:4px;background:var(--bg)}
+.pcard:hover{border-color:var(--ink)}
+.pcard:focus-visible{outline:2px solid var(--accent)}
+.pcard .hk{font-size:.84rem;line-height:1.35;font-weight:500;overflow-wrap:anywhere}
+.pcard .st{font:500 .68rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+.st-posted{color:var(--ok)!important} .st-ready{color:var(--accent)!important}
+.addpost{all:unset;cursor:pointer;font-size:.8rem;color:var(--faint);padding:4px 2px}
+.addpost:hover{color:var(--ink)}
+
+.mix{display:flex;height:10px;border-radius:3px;overflow:hidden;background:var(--sunk)}
+.mix span{display:block;height:100%}
+.mixlegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
+.mixlegend b{font-family:var(--mono);color:var(--ink)}
+
+/* editor drawer */
+.drawer{position:fixed;inset:0;display:flex;justify-content:flex-end;background:color-mix(in srgb,var(--ink) 35%,transparent);z-index:20}
+.drawer .sheet{width:min(560px,100%);height:100%;overflow-y:auto;background:var(--surface);padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--line)}
+.jobpick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.jobpick button{all:unset;cursor:pointer;text-align:center;font-size:.78rem;font-weight:600;padding:8px 4px;border-radius:4px;border:1px solid var(--line)}
+.jobpick button[aria-pressed="true"]{border-color:currentColor;background:var(--sunk)}
+.killhits{font-size:.82rem;color:var(--warn)}
+.killhits mark{background:var(--warn-soft);color:var(--warn);padding:0 3px;border-radius:2px}
+.counter{font:500 .75rem var(--mono);color:var(--muted)}
+
+/* audit */
+.scorerow{display:grid;grid-template-columns:130px minmax(0,1fr) 48px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.scorerow:first-child{border-top:0}
+.scorerow .nm{font-weight:600}
+.scorerow .q{font-size:.85rem;color:var(--muted)}
+.scorerow input[type=range]{width:100%;accent-color:var(--accent)}
+.scorerow .v{font:500 1.3rem var(--mono);text-align:right}
+.scorerow.lowest .nm,.scorerow.lowest .v{color:var(--warn)}
+.verdict{padding:16px;border-radius:var(--r);background:var(--warn-soft);color:var(--ink)}
+.verdict b{color:var(--warn)}
+.sentence{font:700 clamp(1.15rem,2.4vw,1.5rem)/1.35 var(--display)}
+.sentence .slot{color:var(--accent);border-bottom:2px solid var(--accent-soft)}
+.sentence .slot.empty{color:var(--faint);border-bottom-style:dashed;border-color:var(--line)}
+
+/* profile */
+.ptable{width:100%;border-collapse:collapse}
+.ptable td,.ptable th{padding:12px 10px;border-top:1px solid var(--line);vertical-align:top;text-align:left}
+.ptable th{font:500 .7rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:0}
+.ptable td:first-child{font-weight:600;width:110px}
+.ptable .bad{color:var(--faint);text-decoration:line-through;width:22%}
+.ptable input[type=checkbox]{width:18px;height:18px;accent-color:var(--ok)}
+
+/* signals */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{padding:16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line)}
+.kpi .n{font:600 1.9rem/1.1 var(--mono);margin-top:6px}
+.kpi.star{background:var(--gold-soft);border-color:transparent}
+.kpi.star .n{color:var(--gold)}
+.ledger-wrap{overflow-x:auto}
+.ledger{width:100%;border-collapse:collapse;min-width:720px}
+.ledger th,.ledger td{padding:8px;border-top:1px solid var(--line);text-align:left}
+.ledger th{font:500 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:0}
+.ledger td input{padding:5px 7px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ledger tr.cur td{background:var(--accent-soft)}
+.ledger td.wk{font:500 .82rem var(--mono);white-space:nowrap}
+.chartbox svg{width:100%;height:auto;display:block}
+
+/* strategy */
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.phase{padding:16px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.phase.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.phase ul{margin:0;padding-left:18px;color:var(--muted);font-size:.9rem;display:flex;flex-direction:column;gap:4px}
+.rule{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.rule:first-child{border-top:0}
+.rule .n{font:500 .8rem var(--mono);color:var(--accent);padding-top:2px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:.88rem;z-index:30}
+.empty{padding:20px;border:1px dashed var(--line);border-radius:var(--r);color:var(--muted);text-align:center}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);height:auto;z-index:10;flex-direction:row;align-items:center;padding:10px 16px;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto;gap:12px}
+  .brand .runline,.syncstate{display:none}
+  .nav{flex-direction:row}
+  .nav .k{display:none}
+  .nav button{padding:6px 10px;white-space:nowrap}
+  .nav button[aria-current="page"]{box-shadow:inset 0 -2px 0 var(--accent)}
+  main{padding-inline:16px;padding-block:20px 48px}
+  .today-grid,.grid2,.grid3,.phases{grid-template-columns:minmax(0,1fr)}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .scorerow{grid-template-columns:minmax(0,1fr) 40px}
+  .scorerow input[type=range]{grid-column:1/-1;grid-row:2}
+  .jobpick{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="shell">
+  <aside class="rail">
+    <div class="brand"><b>Authority OS</b><span class="runline" id="runline">—</span></div>
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+    <div class="syncstate" id="sync">Loading…</div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div id="drawer"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- constants ---------- */
+const JOBS = {
+  objections:{name:"Objections", why:"Only buyers have objections, so only buyers listen to the answer.", src:"Your last 10–20 sales calls", prompt:"What did a prospect push back on this month? What do they believe that keeps them from buying?"},
+  stories:{name:"Client story", why:"Proves someone like them already got the result.", src:"Wins, losses, what you'd change", prompt:"Which client got a result recently? What was the before, the turning point, the number after?"},
+  trends:{name:"Trend take", why:"Shows you're current. News hits X days before LinkedIn.", src:"X and competitors' newest videos", prompt:"What changed in your industry this week? What does it mean for your ICP specifically?"},
+  process:{name:"Your process", why:"Shows how you think, which is what they're buying.", src:"Voice notes on how you'd fix it", prompt:"Walk through how you'd fix your ICP's problem, step by step, as if on a call."},
+  opinions:{name:"Opinion", why:"Authorities pick a side. People quote the side they agree with.", src:"What you'd argue about at dinner", prompt:"What does your industry believe that you think is wrong?"}
+};
+const JOB_KEYS = Object.keys(JOBS);
+const PILLARS = [
+  {k:"expertise",n:"Expertise",q:"Do you actually know this better than anyone?",fix:"Show your thinking. Lean on process posts that walk through how you solve the problem."},
+  {k:"visibility",n:"Visibility",q:"Do I see you often enough to remember you?",fix:"Frequency is the fix. Hit every post day for 30 days and spend the 12 minutes engaging after each post."},
+  {k:"association",n:"Association",q:"What problem do I connect to your name?",fix:"Lock the one-sentence position and make every post about that one problem. Lead with objections."},
+  {k:"voice",n:"Voice",q:"Does this sound like an actual person I'd trust?",fix:"Fill the voice file and kill list. Draft from voice notes, never from a blank page. Add opinion posts."},
+  {k:"proof",n:"Proof",q:"Has someone like me gotten a result from you?",fix:"Run client stories with real numbers. Put your best result in the Featured section and About."}
+];
+const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const STATUSES = ["idea","drafted","ready","posted"];
+const VIEWS = [
+  {id:"today",n:"Today",k:"T"},
+  {id:"week",n:"Week plan",k:"W"},
+  {id:"batch",n:"Monday batch",k:"B"},
+  {id:"audit",n:"Audit & position",k:"A"},
+  {id:"profile",n:"Profile",k:"P"},
+  {id:"signals",n:"Friday signals",k:"F"},
+  {id:"voice",n:"Voice file",k:"V"},
+  {id:"strategy",n:"90-day strategy",k:"S"}
+];
+
+/* ---------- date helpers ---------- */
+const pad = n => String(n).padStart(2,"0");
+const keyOf = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseKey = k => { const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d); };
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const mondayOf = d => { const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); const w=(x.getDay()+6)%7; return addDays(x,-w); };
+const daysBetween = (a,b) => Math.round((parseKey(keyOf(b))-parseKey(keyOf(a)))/864e5);
+const fmt = (d,o) => d.toLocaleDateString(undefined,o||{month:"short",day:"numeric"});
+const TODAY = new Date(); const todayKey = keyOf(TODAY);
+function nextMonday(){ const t=new Date(TODAY.getFullYear(),TODAY.getMonth(),TODAY.getDate()); const w=t.getDay(); return addDays(t, w===1?0:((8-w)%7||7)); }
+
+/* ---------- state ---------- */
+function blankState(){
+  return {v:1,startDate:keyOf(nextMonday()),postDays:[1,2,3,4,5],postTime:"08:30",batchTime:"09:00",reviewTime:"15:00",
+    scores:{expertise:null,visibility:null,association:null,voice:null,proof:null},
+    pos:{icp:"",problem:"",without:"",proof:"",tag:""},
+    voice:{style:"",phrases:"",kill:"leverage\nsynergy\ngame-changer\nunlock\ndelve\nin today's fast-paced world\nlet that sink in\nhere's the thing"},
+    profile:{banner:{text:"",done:false},headline:{text:"",done:false},featured:{text:"",done:false},about:{text:"",done:false}},
+    posts:[],notes:"",done:{},weeks:{},exported:false};
+}
+let S = blankState();
+let view = "today";
+try{ const h=(location.hash||"").slice(1); if(VIEWS.some(v=>v.id===h)) view=h; else { const r=localStorage.getItem("aos.view"); if(r&&VIEWS.some(v=>v.id===r)) view=r; } }catch(e){}
+let weekOffset = 0;
+let db=null, docRef=null, dirty=false, writing=false, saveTimer=null, mode="local", sample=null, downloads=null;
+
+function merge(base, inc){
+  if(!inc||typeof inc!=="object") return base;
+  const out = Array.isArray(base)?inc.slice():{...base};
+  for(const k in inc){ const b=base?base[k]:undefined, v=inc[k];
+    out[k] = (b && typeof b==="object" && !Array.isArray(b) && v && typeof v==="object" && !Array.isArray(v)) ? merge(b,v) : v; }
+  return out;
+}
+function setSync(t){ const el=document.getElementById("sync"); if(el) el.textContent=t; }
+function save(){
+  dirty=true; setSync("Saving…");
+  clearTimeout(saveTimer); saveTimer=setTimeout(flush,700);
+}
+async function flush(){
+  if(writing){ saveTimer=setTimeout(flush,400); return; }
+  const snapshot = JSON.parse(JSON.stringify(S));
+  if(mode==="db"&&docRef){
+    writing=true;
+    try{ await docRef.set(snapshot); dirty=false; setSync("Saved to your account"); }
+    catch(e){ setSync(e&&e.code==="invalid_argument"?"Read-only view":"Save failed, will retry on next edit"); }
+    writing=false;
+  } else {
+    try{ localStorage.setItem("aos.state",JSON.stringify(snapshot)); dirty=false; setSync("Saved in this browser"); }catch(e){ setSync("Not saved (storage blocked)"); }
+  }
+}
+function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>el.hidden=true,2200); }
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2,10);
+
+/* ---------- derived ---------- */
+function runDay(){ return daysBetween(parseKey(S.startDate),TODAY)+1; }
+function weekNum(d){ return Math.floor(daysBetween(parseKey(S.startDate),d)/7)+1; }
+function sentenceParts(){ const p=S.pos; return {icp:p.icp.trim(),problem:p.problem.trim(),without:p.without.trim()}; }
+function sentenceText(){ const p=sentenceParts(); return `I help ${p.icp||"[1 ICP]"} fix ${p.problem||"[1 problem]"} without ${p.without||"[the thing they hate]"}.`; }
+function lowestPillar(){ const sc=S.scores; const vals=PILLARS.filter(p=>sc[p.k]!=null); if(vals.length<5) return null; return vals.reduce((a,b)=>sc[b.k]<sc[a.k]?b:a); }
+function killWords(){ return S.voice.kill.split("\n").map(s=>s.trim()).filter(Boolean); }
+function killHits(text){ const t=(text||"").toLowerCase(); return killWords().filter(w=>t.includes(w.toLowerCase())); }
+function postsOn(k){ return S.posts.filter(p=>p.date===k); }
+function isPostDay(d){ return S.postDays.includes(d.getDay()); }
+function setupItems(){
+  const pr=S.profile;
+  return [
+    {t:"Score the 5 parts of authority",ok:PILLARS.every(p=>S.scores[p.k]!=null),go:"audit"},
+    {t:"Write your one sentence",ok:!!(S.pos.icp&&S.pos.problem&&S.pos.without),go:"audit"},
+    {t:"Rebuild your profile as a landing page",ok:["banner","headline","featured","about"].every(k=>pr[k].done),go:"profile"},
+    {t:"Fill your voice file and kill list",ok:S.voice.style.trim().length>20,go:"voice"},
+    {t:"Put the 2-hour week on your calendar",ok:!!S.exported,go:"week"}
+  ];
+}
+
+/* ---------- nav ---------- */
+function renderNav(){
+  const nav=document.getElementById("nav");
+  nav.innerHTML=VIEWS.map(v=>`<button data-v="${v.id}" ${v.id===view?'aria-current="page"':""}><span>${v.n}</span><span class="k">${v.k}</span></button>`).join("");
+  nav.querySelectorAll("button").forEach(b=>b.onclick=()=>go(b.dataset.v));
+  const d=runDay();
+  document.getElementById("runline").textContent = d<1 ? `Run starts ${fmt(parseKey(S.startDate),{weekday:"short",month:"short",day:"numeric"})}` : d>90 ? `Day ${d} · past the 90` : `Day ${d} of 90 · week ${Math.ceil(d/7)}`;
+}
+function go(v){ view=v; try{localStorage.setItem("aos.view",v);}catch(e){} renderNav(); render(); window.scrollTo(0,0); }
+
+function render(){
+  const m=document.getElementById("main");
+  m.innerHTML = ({today:vToday,week:vWeek,batch:vBatch,audit:vAudit,profile:vProfile,signals:vSignals,voice:vVoice,strategy:vStrategy})[view]();
+  bind[view]&&bind[view](m);
+}
+const bind={};
+
+/* ---------- shared bits ---------- */
+function runBar(){
+  const d=Math.max(0,Math.min(90,runDay()));
+  return `<div class="run panel"><div class="row" style="justify-content:space-between"><span class="label">90-day run</span><span class="mono small">${runDay()<1?"Not started":`Day ${Math.min(runDay(),90)} / 90`}</span></div>
+  <div class="track"><div class="fill" style="width:${d/90*100}%"></div><div class="w6" style="left:${42/90*100}%" title="Week 6"></div></div>
+  <div class="runlegend"><span>${fmt(parseKey(S.startDate))}</span><span class="q">Week 6: most founders quit here</span><span>${fmt(addDays(parseKey(S.startDate),89))}</span></div></div>`;
+}
+function jobChip(j){ if(!j||!JOBS[j]) return `<span class="chip job-none"><i></i>No job</span>`; return `<span class="chip job-${j}"><i></i>${JOBS[j].name}</span>`; }
+
+/* ---------- TODAY ---------- */
+function todayTasks(){
+  const t=[]; const dow=TODAY.getDay(); const rd=runDay();
+  if(dow===1){
+    t.push({id:"batch1",t:"Voice notes on 3–5 objections or trends",d:"Talk, don't type. Paste the transcripts into Monday batch.",min:"30 min",go:"batch"});
+    t.push({id:"batch2",t:"Turn them into this week's posts",d:"Use your voice file and kill list. Every post gets 1 of the 5 jobs.",min:"30 min",go:"batch"});
+  }
+  if(isPostDay(TODAY)){
+    const ps=postsOn(todayKey);
+    t.push({id:"publish",t:ps.length?"Publish today's post":"No post planned for today",d:ps.length?"":"Add one in the week plan or pull from the idea bank.",min:S.postTime,post:ps[0],go:"week"});
+    t.push({id:"engage",t:"Reply to every comment in the first hour",d:"Then leave real comments on 3 posts by people in your ICP.",min:"12 min"});
+  }
+  if(dow===5){
+    t.push({id:"review",t:"Friday signal check",d:"Read the titles of who viewed your profile and who followed. Could they buy from you? Log it.",min:"10 min",go:"signals"});
+  }
+  if(!t.length) t.push({id:"rest",t:"Nothing scheduled today",d:dow===0?"Tomorrow is batch day. Jot down any objections you heard this week.":"Off day. Trust is still compounding in the background.",min:""});
+  return t;
+}
+function vToday(){
+  const rd=runDay(); const tasks=todayTasks(); const done=S.done[todayKey]||[];
+  const setup=setupItems(); const setupDone=setup.filter(s=>s.ok).length;
+  const lp=lowestPillar();
+  const wk=Math.max(1,weekNum(TODAY));
+  const thisMon=mondayOf(TODAY); const weekPosts=S.posts.filter(p=>{const d=parseKey(p.date);return d>=thisMon&&d<addDays(thisMon,7);});
+  const posted=weekPosts.filter(p=>p.status==="posted").length;
+  const target=S.postDays.length;
+  const tot=totals();
+  return `<div class="view">
+  <div class="head"><div><span class="label">${fmt(TODAY,{weekday:"long",month:"long",day:"numeric"})}</span><h1>${rd<1?"Get set up before the run starts":rd>90?"You finished the 90 days":"Today's authority work"}</h1>
+  <p class="sub">${rd<1?`Your 90-day run starts ${fmt(parseKey(S.startDate),{weekday:"long",month:"long",day:"numeric"})}. Knock out the setup list first so Monday is just the batch.`:"Two hours a week, spent on purpose. Tick things off as you go."}</p></div></div>
+  ${runBar()}
+  <div class="today-grid">
+    <div class="panel"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2>${DOW[TODAY.getDay()]}day</h2><span class="label">${done.length}/${tasks.filter(x=>x.id!=="rest").length} done</span></div>
+      ${tasks.map(x=>`<div class="task ${done.includes(x.id)?"done":""}">${x.id==="rest"?"<span></span>":`<input type="checkbox" id="tk-${x.id}" data-task="${x.id}" ${done.includes(x.id)?"checked":""}>`}
+        <label for="tk-${x.id}"><div class="t">${esc(x.t)}</div>${x.d?`<div class="d">${esc(x.d)}</div>`:""}
+        ${x.post?`<div class="postpreview">${jobChip(x.post.job)} <strong>${esc(x.post.hook)}</strong>${x.post.body?"\n\n"+esc(x.post.body.slice(0,400))+(x.post.body.length>400?"…":""):""}</div><div class="row" style="margin-top:8px"><button class="btn" data-copy="${x.post.id}">Copy post</button><a class="btn" href="https://www.linkedin.com/feed/" target="_blank" rel="noopener">Open LinkedIn</a><button class="btn ghost" data-markposted="${x.post.id}">Mark posted</button></div>`:""}
+        </label><span class="min">${esc(x.min)}${x.go?` <button class="btn ghost small" data-go="${x.go}">Open</button>`:""}</span></div>`).join("")}
+    </div>
+    <div class="stack">
+      ${setupDone<5?`<div class="panel setup"><div class="row" style="justify-content:space-between"><h3>Setup</h3><span class="label">${setupDone}/5</span></div><ul style="margin-top:8px">${setup.map(s=>`<li><span class="dot ${s.ok?"on":""}"></span><span style="flex:1">${s.t}</span>${s.ok?"":`<button class="btn ghost small" data-go="${s.go}">Do it</button>`}</li>`).join("")}</ul></div>`:""}
+      <div class="panel stack"><span class="label">This week · week ${wk}</span>
+        <div class="row" style="justify-content:space-between"><span>Posts published</span><span class="mono">${posted} / ${target}</span></div>
+        <div class="track" style="height:8px"><div class="fill" style="width:${Math.min(100,posted/Math.max(1,target)*100)}%"></div></div>
+        ${mixBar(weekPosts)}
+      </div>
+      <div class="panel stack"><span class="label">Focus for the next 30 days</span>
+        ${lp?`<p><b style="color:var(--warn)">${lp.n}</b> scored lowest at ${S.scores[lp.k]}/10.</p><p class="small muted">${lp.fix}</p>`:`<p class="muted small">Score yourself on the 5 parts of authority to find it.</p><button class="btn" data-go="audit">Score yourself</button>`}
+      </div>
+      <div class="panel stack"><span class="label">The number that counts</span>
+        <div class="row" style="justify-content:space-between;align-items:baseline"><span>Booked calls so far</span><span class="mono" style="font-size:1.6rem;color:var(--gold)">${tot.calls}</span></div>
+        <p class="small muted">Not impressions. Log it every Friday.</p>
+      </div>
+    </div>
+  </div></div>`;
+}
+bind.today=m=>{
+  m.querySelectorAll("[data-task]").forEach(c=>c.onchange=()=>{const a=new Set(S.done[todayKey]||[]); c.checked?a.add(c.dataset.task):a.delete(c.dataset.task); S.done[todayKey]=[...a]; save(); render();});
+  bindCommon(m);
+};
+function bindCommon(m){
+  m.querySelectorAll("[data-go]").forEach(b=>b.onclick=e=>{e.preventDefault();go(b.dataset.go);});
+  m.querySelectorAll("[data-copy]").forEach(b=>b.onclick=e=>{e.preventDefault();const p=S.posts.find(x=>x.id===b.dataset.copy); copyText(postText(p));});
+  m.querySelectorAll("[data-markposted]").forEach(b=>b.onclick=e=>{e.preventDefault();const p=S.posts.find(x=>x.id===b.dataset.markposted); p.status="posted"; save(); render(); toast("Marked posted");});
+}
+function postText(p){ return p ? (p.hook+(p.body?"\n\n"+p.body:"")) : ""; }
+function copyText(t){
+  try{ navigator.clipboard.writeText(t).then(()=>toast("Copied"),()=>fallbackCopy(t)); }catch(e){ fallbackCopy(t); }
+}
+function fallbackCopy(t){ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");toast("Copied");}catch(e){toast("Select the text and copy it");} ta.remove(); }
+function mixBar(posts){
+  const c={}; JOB_KEYS.forEach(k=>c[k]=0); let none=0; posts.forEach(p=>JOBS[p.job]?c[p.job]++:none++);
+  const n=posts.length||1;
+  return `<div class="mix" aria-label="Job mix">${JOB_KEYS.map(k=>c[k]?`<span style="width:${c[k]/n*100}%;background:var(--j-${k})"></span>`:"").join("")}${none?`<span style="width:${none/n*100}%;background:var(--warn);opacity:.4"></span>`:""}</div>
+  <div class="mixlegend">${JOB_KEYS.map(k=>`<span class="job-${k}"><span style="color:var(--muted)">${JOBS[k].name}</span> <b>${c[k]}</b></span>`).join("")}${none?`<span class="job-none">No job <b>${none}</b></span>`:""}</div>`;
+}
+
+/* ---------- WEEK ---------- */
+function vWeek(){
+  const mon=addDays(mondayOf(TODAY),weekOffset*7);
+  const days=[...Array(7)].map((_,i)=>addDays(mon,i));
+  const wkPosts=S.posts.filter(p=>{const d=parseKey(p.date);return d>=mon&&d<addDays(mon,7);});
+  const wn=weekNum(mon);
+  return `<div class="view">
+  <div class="head"><div><span class="label">${wn>=1&&wn<=13?`Run week ${wn} of 13`:"Outside the 90-day run"}</span><h1>Week of ${fmt(mon,{month:"long",day:"numeric"})}</h1>
+  <p class="sub">Every post does 1 of 5 jobs. If it doesn't, it's just filling the calendar.</p></div>
+  <div class="row"><button class="btn" id="prevw" aria-label="Previous week">←</button><button class="btn" id="thisw">This week</button><button class="btn" id="nextw" aria-label="Next week">→</button></div></div>
+  <div class="panel stack"><div class="weekbar"><span class="label">Job mix this week · ${wkPosts.length} posts</span>${wkPosts.some(p=>!JOBS[p.job])?`<span class="small" style="color:var(--warn)">Some posts have no job. Give them one or cut them.</span>`:""}</div>${mixBar(wkPosts)}</div>
+  <div class="board-wrap"><div class="board">
+  ${days.map(d=>{const k=keyOf(d); const pd=isPostDay(d); const ps=postsOn(k);
+    return `<div class="day ${k===todayKey?"is-today":""} ${!pd&&d.getDay()!==1&&d.getDay()!==5?"off":""}">
+      <div class="dh"><b>${DOW[d.getDay()]}</b><span>${fmt(d)}</span></div>
+      ${d.getDay()===1?`<div class="block">${S.batchTime} · Batch session · 60 min</div>`:""}
+      ${ps.map(p=>`<button class="pcard" data-edit="${p.id}"><div class="row" style="gap:4px">${jobChip(p.job)}${p.example?'<span class="chip example">Example</span>':""}</div><span class="hk">${esc(p.hook||"Untitled post")}</span><span class="st st-${p.status}">${p.status}</span></button>`).join("")}
+      ${pd?`<div class="block" style="background:var(--sunk);color:var(--muted)">${S.postTime} post · 12 min engage</div>`:""}
+      ${d.getDay()===5?`<div class="block review">${S.reviewTime} · Signal check</div>`:""}
+      <button class="addpost" data-add="${k}">+ Add post</button>
+    </div>`;}).join("")}
+  </div></div>
+  <div class="grid2">
+    <div class="panel stack"><h3>Your schedule</h3>
+      <div class="field"><span class="label">Post days</span><div class="row">${[1,2,3,4,5,6,0].map(i=>`<label class="chip" style="cursor:pointer;${S.postDays.includes(i)?"background:var(--accent-soft);color:var(--accent)":""}"><input type="checkbox" data-pd="${i}" ${S.postDays.includes(i)?"checked":""} style="width:auto;margin:0"> ${DOW[i]}</label>`).join("")}</div><span class="small muted">The playbook's cap is 7 a week. 3–5 is plenty.</span></div>
+      <div class="grid3"><label class="field"><span class="label">Monday batch</span><input type="time" id="bt" value="${S.batchTime}"></label><label class="field"><span class="label">Post time</span><input type="time" id="pt" value="${S.postTime}"></label><label class="field"><span class="label">Friday check</span><input type="time" id="rt" value="${S.reviewTime}"></label></div>
+      <label class="field"><span class="label">Run start (a Monday)</span><input type="date" id="sd" value="${S.startDate}"></label>
+    </div>
+    <div class="panel stack"><h3>Put it on your calendar</h3>
+      <p class="small muted">Downloads a calendar file with the weekly Monday block, your post-day engagement slots, the Friday signal check for all 13 weeks, and every post you've planned. Open it to add everything to Google Calendar, Outlook or Apple Calendar.</p>
+      <div class="row"><button class="btn primary" id="ics">Download calendar file</button></div>
+      <p class="small muted" id="icsnote" hidden>Saving files isn't available in this view. Copy the text below into a file named authority.ics instead.</p>
+      <textarea id="icstext" hidden readonly style="min-height:120px;font-family:var(--mono);font-size:.75rem"></textarea>
+    </div>
+  </div></div>`;
+}
+bind.week=m=>{
+  m.querySelector("#prevw").onclick=()=>{weekOffset--;render();};
+  m.querySelector("#nextw").onclick=()=>{weekOffset++;render();};
+  m.querySelector("#thisw").onclick=()=>{weekOffset=0;render();};
+  m.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEditor(b.dataset.edit));
+  m.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const p={id:uid(),date:b.dataset.add,job:"",hook:"",body:"",status:"idea"}; S.posts.push(p); save(); openEditor(p.id);});
+  m.querySelectorAll("[data-pd]").forEach(c=>c.onchange=()=>{const i=+c.dataset.pd; const s=new Set(S.postDays); c.checked?s.add(i):s.delete(i); S.postDays=[...s].sort(); save(); render();});
+  m.querySelector("#bt").onchange=e=>{S.batchTime=e.target.value;save();render();};
+  m.querySelector("#pt").onchange=e=>{S.postTime=e.target.value;save();render();};
+  m.querySelector("#rt").onchange=e=>{S.reviewTime=e.target.value;save();render();};
+  m.querySelector("#sd").onchange=e=>{if(!e.target.value)return; S.startDate=keyOf(mondayOf(parseKey(e.target.value))); save(); renderNav(); render(); toast("Run starts "+fmt(parseKey(S.startDate)));};
+  m.querySelector("#ics").onclick=exportIcs;
+};
+function icsDT(k,t){ return k.replace(/-/g,"")+"T"+t.replace(":","")+"00"; }
+function addMin(t,mins){ const [h,mm]=t.split(":").map(Number); const x=h*60+mm+mins; return pad(Math.floor(x/60)%24)+":"+pad(x%60); }
+function icsEsc(s){ return String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n"); }
+function buildIcs(){
+  const start=parseKey(S.startDate); const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Authority OS//EN","CALSCALE:GREGORIAN"];
+  const stamp=new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+  const ev=(id,k,t,mins,title,desc,rrule)=>{L.push("BEGIN:VEVENT","UID:"+id+"@authority-os","DTSTAMP:"+stamp,"DTSTART:"+icsDT(k,t),"DTEND:"+icsDT(k,addMin(t,mins)),"SUMMARY:"+icsEsc(title),"DESCRIPTION:"+icsEsc(desc)); if(rrule)L.push("RRULE:"+rrule); L.push("END:VEVENT");};
+  ev("batch-"+S.startDate,S.startDate,S.batchTime,60,"Authority: Monday batch (voice notes → week's posts)","30 min: voice notes on 3–5 objections or trends.\n30 min: turn them into the week's posts with your voice file and kill list.","FREQ=WEEKLY;BYDAY=MO;COUNT=13");
+  const byday=S.postDays.map(i=>["SU","MO","TU","WE","TH","FR","SA"][i]).join(",");
+  if(byday){ let first=start; while(!S.postDays.includes(first.getDay())) first=addDays(first,1);
+    ev("engage-"+S.startDate,keyOf(first),addMin(S.postTime,0),12,"Authority: post + 12 min engagement","Publish. Reply to every comment in the first hour. Comment on a few ICP posts.","FREQ=WEEKLY;BYDAY="+byday+";UNTIL="+keyOf(addDays(start,90)).replace(/-/g,"")+"T000000"); }
+  ev("review-"+S.startDate,keyOf(addDays(start,4)),S.reviewTime,15,"Authority: Friday signal check","Read the titles of who viewed your profile and who followed. Could they buy from you? Log it in Friday signals.","FREQ=WEEKLY;BYDAY=FR;COUNT=13");
+  ev("day90-"+S.startDate,keyOf(addDays(start,89)),"16:00",30,"Authority: day 90 review","Judge the run now, not before. Booked calls are the number that counts.");
+  S.posts.filter(p=>p.date>=todayKey&&p.status!=="posted"&&!p.example).forEach(p=>ev("post-"+p.id,p.date,S.postTime,5,"Post: "+(p.hook||"Untitled").slice(0,80),postText(p)));
+  L.push("END:VCALENDAR"); return L.join("\r\n");
+}
+async function exportIcs(){
+  const txt=buildIcs();
+  if(downloads){ try{ await downloads.save({filename:"authority-2-hour-week.ics",data:txt}); S.exported=true; save(); toast("Calendar file saved"); return; }catch(e){ if(e&&e.code==="cancelled"||e&&e.code==="declined"){return;} } }
+  try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"text/calendar"})); a.download="authority-2-hour-week.ics"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); if(!window.claude){ S.exported=true; save(); toast("Calendar file downloaded"); return; } }catch(e){}
+  const ta=document.getElementById("icstext"); ta.hidden=false; ta.value=txt; document.getElementById("icsnote").hidden=false; S.exported=true; save();
+}
+
+/* ---------- editor ---------- */
+function openEditor(id){
+  const p=S.posts.find(x=>x.id===id); if(!p) return;
+  const d=document.getElementById("drawer");
+  const draw=()=>{
+    const hits=killHits(p.hook+" "+p.body);
+    d.innerHTML=`<div class="drawer" id="dz"><div class="sheet" role="dialog" aria-label="Edit post">
+      <div class="row" style="justify-content:space-between"><h2>Post</h2><button class="btn ghost" id="cl">Close</button></div>
+      ${p.example?`<p class="small" style="color:var(--gold)">This is an example post. Edit it into your own or delete it.</p>`:""}
+      <div class="field"><span class="label">Which job does it do?</span><div class="jobpick">${JOB_KEYS.map(k=>`<button class="job-${k}" data-j="${k}" aria-pressed="${p.job===k}">${JOBS[k].name}</button>`).join("")}</div>
+      <span class="small muted" id="jobwhy">${p.job?JOBS[p.job].why+" Source: "+JOBS[p.job].src.toLowerCase()+".":"Pick one. A post with no job dilutes the association."}</span></div>
+      <div class="grid2"><label class="field"><span class="label">Date</span><input type="date" id="pdate" value="${p.date}"></label>
+      <label class="field"><span class="label">Status</span><select id="pstat">${STATUSES.map(s=>`<option ${s===p.status?"selected":""}>${s}</option>`).join("")}</select></label></div>
+      <label class="field"><span class="label">Hook (first line)</span><input type="text" id="phook" value="${esc(p.hook)}" placeholder="The line that earns the 'see more' click"></label>
+      <label class="field"><span class="label">Body</span><textarea id="pbody" style="min-height:260px" placeholder="Write it the way you'd say it on a call.">${esc(p.body)}</textarea></label>
+      <div class="row" style="justify-content:space-between"><span class="counter" id="pcount"></span><span class="killhits" id="pkill">${hits.length?"Kill list: "+hits.map(h=>`<mark>${esc(h)}</mark>`).join(" "):""}</span></div>
+      <div class="row"><button class="btn primary" id="pcopy">Copy post</button><a class="btn" href="https://www.linkedin.com/feed/" target="_blank" rel="noopener">Open LinkedIn</a>${sample?`<button class="btn" id="ptight">Tighten in my voice</button>`:""}<span style="flex:1"></span><button class="btn ghost" id="pdel" style="color:var(--warn)">Delete</button></div>
+      <p class="small muted" id="pmsg"></p>
+    </div></div>`;
+    const upd=()=>{ const t=p.hook+"\n\n"+p.body; d.querySelector("#pcount").textContent=t.length+" / 3,000 chars"; const h=killHits(t); d.querySelector("#pkill").innerHTML=h.length?"Kill list: "+h.map(x=>`<mark>${esc(x)}</mark>`).join(" "):""; };
+    upd();
+    d.querySelector("#dz").onclick=e=>{if(e.target.id==="dz")close();};
+    d.querySelector("#cl").onclick=close;
+    d.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{p.job=b.dataset.j; save(); draw();});
+    d.querySelector("#pdate").onchange=e=>{p.date=e.target.value;save();};
+    d.querySelector("#pstat").onchange=e=>{p.status=e.target.value;save();};
+    d.querySelector("#phook").oninput=e=>{p.hook=e.target.value;p.example=false;save();upd();};
+    d.querySelector("#pbody").oninput=e=>{p.body=e.target.value;p.example=false;save();upd();};
+    d.querySelector("#pcopy").onclick=()=>copyText(postText(p));
+    const del=d.querySelector("#pdel"); del.onclick=()=>{ if(del.dataset.armed){ S.posts=S.posts.filter(x=>x!==p); save(); close(); toast("Post deleted"); } else { del.dataset.armed="1"; del.textContent="Tap again to delete"; } };
+    const tb=d.querySelector("#ptight"); if(tb) tb.onclick=async()=>{
+      tb.disabled=true; const msg=d.querySelector("#pmsg"); msg.textContent="Thinking…";
+      try{
+        const {text}=await sample(`Rewrite this LinkedIn post so it sounds like the author, tighter and plainer. Keep the same point and job (${JOBS[p.job]?JOBS[p.job].name:"unspecified"}). Never use these words or phrases: ${killWords().join("; ")}. No hashtags, no emoji, no em-dashes.\n\nAuthor's positioning: ${sentenceText()}\nHow the author talks: ${S.voice.style||"(not given)"}\nPhrases they actually use: ${S.voice.phrases||"(not given)"}\n\nReply with the post only: first line is the hook, blank line, then the body.\n\nPOST:\n${postText(p)}`,{cache:false,onText:({text})=>{msg.textContent="Writing…";}});
+        const parts=text.trim().split(/\n\s*\n/); p.hook=parts.shift().trim(); p.body=parts.join("\n\n").trim(); p.example=false; save(); draw(); d.querySelector("#pmsg").textContent="Rewritten. Read it out loud before you post.";
+      }catch(e){ msg.textContent=sampleErr(e); tb.disabled=false; }
+    };
+  };
+  const close=()=>{ d.innerHTML=""; document.removeEventListener("keydown",onKey); render(); };
+  const onKey=e=>{ if(e.key==="Escape") close(); };
+  document.addEventListener("keydown",onKey);
+  draw(); const h=d.querySelector("#phook"); if(h&&!p.hook) h.focus();
+}
+function sampleErr(e){ const c=e&&e.code; if(c==="not_granted"||c==="sampling_disabled"){ return "Claude isn't allowed for this page. You can still write by hand."; } if(c==="rate_limited") return "Too many requests right now. Try again in a minute."; if(c==="cancelled") return ""; if(c==="invalid_json") return "Claude's answer didn't come back in the right shape. Try again."; return "Something went wrong reaching Claude. Try again."; }
+
+/* ---------- BATCH ---------- */
+function vBatch(){
+  const mon=addDays(mondayOf(TODAY), TODAY.getDay()===0?7:0);
+  const slots=[...Array(7)].map((_,i)=>addDays(mon,i)).filter(isPostDay);
+  const open=slots.filter(d=>!postsOn(keyOf(d)).length);
+  return `<div class="view">
+  <div class="head"><div><span class="label">Monday · 60 minutes</span><h1>Monday batch</h1><p class="sub">Never start from a blank page. Talk through 3–5 objections or trends into your phone, paste the transcripts here, then turn them into the week.</p></div></div>
+  <div class="grid2">
+    <div class="panel stack"><div class="row" style="justify-content:space-between"><h3>1 · Voice notes</h3><span class="mono small" style="color:var(--accent)">30 min</span></div>
+      <p class="small muted">One note per idea. Separate notes with a blank line. Rough is fine. These prompts are where good ones come from:</p>
+      <div class="stack">${JOB_KEYS.map(k=>`<div class="small">${jobChip(k)} <span class="muted" style="margin-left:6px">${JOBS[k].prompt}</span></div>`).join("")}</div>
+      <textarea id="notes" style="min-height:260px" placeholder="e.g. Had a CFO tell me last week they can't justify another tool until Q2…">${esc(S.notes)}</textarea>
+    </div>
+    <div class="panel stack"><div class="row" style="justify-content:space-between"><h3>2 · Turn them into posts</h3><span class="mono small" style="color:var(--accent)">30 min</span></div>
+      <p class="small muted">Week of ${fmt(mon,{month:"long",day:"numeric"})}: ${slots.length} post days, <b>${open.length}</b> still empty${open.length?" ("+open.map(d=>DOW[d.getDay()]).join(", ")+")":""}.</p>
+      ${sample?`<button class="btn primary" id="draft" ${open.length?"":"disabled"}>Draft ${open.length} posts from my notes</button>
+      <p class="small muted">Claude drafts from your notes, one sentence, voice file and kill list, and assigns each post a job. You edit, then mark them ready.</p>`:`<p class="small muted">Drafting with Claude isn't available in this view. Use the notes on the left and write each post in the week plan.</p>`}
+      <p class="small" id="draftmsg"></p>
+      <div id="drafted" class="stack">${slots.map(d=>postsOn(keyOf(d)).map(p=>`<button class="pcard" data-edit="${p.id}"><div class="row" style="gap:4px"><span class="mono small muted">${DOW[d.getDay()]}</span>${jobChip(p.job)}${p.example?'<span class="chip example">Example</span>':""}</div><span class="hk">${esc(p.hook||"Untitled")}</span><span class="st st-${p.status}">${p.status}</span></button>`).join("")).join("")||'<div class="empty">No posts this week yet.</div>'}</div>
+      <div class="row"><button class="btn" data-go="week">Open week plan</button></div>
+    </div>
+  </div></div>`;
+}
+bind.batch=m=>{
+  m.querySelector("#notes").oninput=e=>{S.notes=e.target.value;save();};
+  m.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEditor(b.dataset.edit));
+  bindCommon(m);
+  const b=m.querySelector("#draft"); if(!b) return;
+  b.onclick=async()=>{
+    const mon=addDays(mondayOf(TODAY), TODAY.getDay()===0?7:0);
+    const open=[...Array(7)].map((_,i)=>addDays(mon,i)).filter(isPostDay).filter(d=>!postsOn(keyOf(d)).length);
+    if(!S.notes.trim()){ m.querySelector("#draftmsg").textContent="Paste at least one voice note first."; return; }
+    b.disabled=true; const msg=m.querySelector("#draftmsg"); msg.textContent="Thinking… this usually takes under a minute.";
+    const lp=lowestPillar();
+    try{
+      const out=await sample.json(`You are drafting a founder's LinkedIn posts for the week. Write exactly ${open.length} posts from the voice notes below.\n\nRules:\n- Every post is about the one problem in the positioning sentence and does exactly one of these jobs: objections (answer a buyer objection), stories (client result with a real number from the notes), trends (take on industry news), process (how the author would fix it), opinions (pick a side).\n- Vary the jobs across the week.${lp?` The author's weakest area is ${lp.n}; lean toward posts that build it.`:""}\n- Sound like the author. Plain words, short sentences. No hashtags, emoji or em-dashes.\n- Never use: ${killWords().join("; ")}.\n- Use only facts in the notes. If a story lacks a number, write [number] as a placeholder.\n- 120–220 words each. Hook is one line under 15 words.\n\nPositioning: ${sentenceText()}\nProof they can cite: ${S.pos.proof||"(none given)"}\nHow the author talks: ${S.voice.style||"(not given)"}\nPhrases they use: ${S.voice.phrases||"(not given)"}\n\nVOICE NOTES:\n${S.notes.slice(0,12000)}\n\nReply with only a JSON array of {"job": one of "objections"|"stories"|"trends"|"process"|"opinions", "hook": string, "body": string}.`,{cache:false,onText:()=>{msg.textContent="Writing drafts…";}});
+      if(!Array.isArray(out)||!out.length) throw {code:"invalid_json"};
+      out.slice(0,open.length).forEach((x,i)=>S.posts.push({id:uid(),date:keyOf(open[i]),job:JOB_KEYS.includes(x.job)?x.job:"",hook:String(x.hook||"").trim(),body:String(x.body||"").trim(),status:"drafted"}));
+      if(TODAY.getDay()===1) S.done[todayKey]=[...new Set([...(S.done[todayKey]||[]),"batch2"])];
+      save(); render(); toast(out.length+" drafts added");
+    }catch(e){ msg.textContent=sampleErr(e); b.disabled=false; }
+  };
+};
+
+/* ---------- AUDIT ---------- */
+function vAudit(){
+  const lp=lowestPillar(); const sp=sentenceParts();
+  const slot=(v,ph)=>`<span class="slot ${v?"":"empty"}">${esc(v||ph)}</span>`;
+  return `<div class="view">
+  <div class="head"><div><span class="label">Step 1 + 2</span><h1>Audit & position</h1><p class="sub">Authority is 5 things and expertise is only one. Score yourself honestly, then give the market one sentence to remember you by.</p></div></div>
+  <div class="grid2">
+    <div class="panel"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2>Score yourself 1–10</h2><span class="label">What buyers check</span></div>
+      ${PILLARS.map(p=>{const v=S.scores[p.k];return `<div class="scorerow ${lp&&lp.k===p.k?"lowest":""}" data-row="${p.k}"><div><div class="nm">${p.n}</div><div class="q">${p.q}</div></div><input type="range" min="1" max="10" step="1" value="${v==null?5:v}" data-score="${p.k}" aria-label="${p.n} score"><div class="v mono" id="sv-${p.k}">${v==null?"–":v}</div></div>`;}).join("")}
+    </div>
+    <div class="stack">
+      <div class="verdict" id="verdict">${lp?`<span class="label" style="color:var(--warn)">Your next 30 days</span><p style="margin-top:6px"><b>${lp.n}</b> is lowest. ${lp.fix}</p>`:`<span class="label">Your next 30 days</span><p style="margin-top:6px">Move each slider. Whatever comes out lowest is where the next month of content goes.</p>`}</div>
+      <div class="panel stack"><h3>Retake it monthly</h3><p class="small muted">Scores are your read, not measured data. Re-score at day 30 and day 60 and shift focus to whatever's lowest then.</p></div>
+    </div>
+  </div>
+  <div class="panel stack">
+    <span class="label">Your one sentence</span>
+    <p class="sentence" id="sent">I help ${slot(sp.icp,"[1 ICP]")} fix ${slot(sp.problem,"[1 problem]")} without ${slot(sp.without,"[the thing they hate]")}.</p>
+    <div class="grid2">
+      <label class="field"><span class="label">1 ICP</span><input type="text" data-pos="icp" value="${esc(S.pos.icp)}" placeholder="Series A SaaS CFOs"></label>
+      <label class="field"><span class="label">1 problem</span><input type="text" data-pos="problem" value="${esc(S.pos.problem)}" placeholder="board decks that take a full week to build"></label>
+      <label class="field"><span class="label">Without</span><input type="text" data-pos="without" value="${esc(S.pos.without)}" placeholder="hiring another analyst"></label>
+      <label class="field"><span class="label">Proof</span><input type="text" data-pos="proof" value="${esc(S.pos.proof)}" placeholder="Your best client result, with the actual number"></label>
+    </div>
+    <label class="field"><span class="label">The test: "That's the ___ person."</span><input type="text" data-pos="tag" value="${esc(S.pos.tag)}" placeholder="board deck"></label>
+    <p class="small muted" id="tagtest">${S.pos.tag?`If someone says <b>"you need to talk to them, they're the ${esc(S.pos.tag)} person,"</b> the position is working.`:"If a peer can't fill this blank about you in 3 words, the sentence is too broad."}</p>
+  </div></div>`;
+}
+bind.audit=m=>{
+  m.querySelectorAll("[data-score]").forEach(r=>{
+    const set=()=>{S.scores[r.dataset.score]=+r.value; m.querySelector("#sv-"+r.dataset.score).textContent=r.value; save(); refreshVerdict(m);};
+    r.oninput=set; r.onclick=set;
+  });
+  m.querySelectorAll("[data-pos]").forEach(i=>i.oninput=()=>{S.pos[i.dataset.pos]=i.value; save();
+    const sp=sentenceParts(); const slot=(v,ph)=>`<span class="slot ${v?"":"empty"}">${esc(v||ph)}</span>`;
+    m.querySelector("#sent").innerHTML=`I help ${slot(sp.icp,"[1 ICP]")} fix ${slot(sp.problem,"[1 problem]")} without ${slot(sp.without,"[the thing they hate]")}.`;
+    m.querySelector("#tagtest").innerHTML=S.pos.tag?`If someone says <b>"you need to talk to them, they're the ${esc(S.pos.tag)} person,"</b> the position is working.`:"If a peer can't fill this blank about you in 3 words, the sentence is too broad.";
+  });
+};
+function refreshVerdict(m){
+  const lp=lowestPillar();
+  m.querySelectorAll("[data-row]").forEach(r=>r.classList.toggle("lowest",!!lp&&lp.k===r.dataset.row));
+  m.querySelector("#verdict").innerHTML=lp?`<span class="label" style="color:var(--warn)">Your next 30 days</span><p style="margin-top:6px"><b>${lp.n}</b> is lowest. ${lp.fix}</p>`:`<span class="label">Your next 30 days</span><p style="margin-top:6px">${5-PILLARS.filter(p=>S.scores[p.k]!=null).length} left to score. Whatever comes out lowest is where the next month of content goes.</p>`;
+}
+
+/* ---------- PROFILE ---------- */
+function vProfile(){
+  const rows=[
+    {k:"banner",n:"Banner",bad:"A stock photo of a city skyline",good:"Who you help and the result they get",sug:S.pos.icp&&S.pos.problem?`For ${S.pos.icp}: ${S.pos.problem}, fixed.`:""},
+    {k:"headline",n:"Headline",bad:"CEO at Company",good:"I help [ICP] fix [problem]",sug:S.pos.icp&&S.pos.problem?`I help ${S.pos.icp} fix ${S.pos.problem}`:""},
+    {k:"featured",n:"Featured",bad:"Empty, or an old press article",good:"A lead magnet and a booking link",sug:""},
+    {k:"about",n:"About",bad:"Career history, top to bottom",good:"The problem, your proof, the next step",sug:S.pos.problem?`The problem: ${S.pos.problem}.\nProof: ${S.pos.proof||"[your best result, with the number]"}.\nNext step: [book a call / grab the guide].`:""}
+  ];
+  const done=rows.filter(r=>S.profile[r.k].done).length;
+  return `<div class="view">
+  <div class="head"><div><span class="label">Step 5 · ${done}/4 rebuilt</span><h1>Profile as a landing page</h1><p class="sub">Someone reads your best post, gets curious enough to click your name, and lands here. Give them somewhere to go: a DM, a download, or a call.</p></div></div>
+  <div class="panel" style="overflow-x:auto"><table class="ptable"><thead><tr><th>Section</th><th>Built like a resume</th><th>Built like a landing page · yours</th><th>Done</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td>${r.n}</td><td class="bad">${r.bad}</td><td><div class="stack" style="gap:6px"><span class="small muted">${r.good}</span>
+    ${r.k==="about"?`<textarea data-pf="${r.k}" placeholder="${esc(r.sug||r.good)}">${esc(S.profile[r.k].text)}</textarea>`:`<input type="text" data-pf="${r.k}" value="${esc(S.profile[r.k].text)}" placeholder="${esc(r.sug||r.good)}">`}
+    ${r.sug&&!S.profile[r.k].text?`<button class="btn ghost small" data-usesug="${r.k}" data-sug="${esc(r.sug)}" style="align-self:start">Use suggestion</button>`:""}
+    ${S.profile[r.k].text?`<button class="btn ghost small" data-cp="${r.k}" style="align-self:start">Copy</button>`:""}</div></td>
+    <td><input type="checkbox" data-pdone="${r.k}" ${S.profile[r.k].done?"checked":""} aria-label="${r.n} updated on LinkedIn"></td></tr>`).join("")}
+  </tbody></table></div>
+  <div class="panel row" style="justify-content:space-between"><p class="small muted">Write it here, paste it into LinkedIn, then tick Done.</p><a class="btn" href="https://www.linkedin.com/in/me/" target="_blank" rel="noopener">Open my LinkedIn profile</a></div>
+  </div>`;
+}
+bind.profile=m=>{
+  m.querySelectorAll("[data-pf]").forEach(i=>i.oninput=()=>{S.profile[i.dataset.pf].text=i.value;save();});
+  m.querySelectorAll("[data-pdone]").forEach(c=>c.onchange=()=>{S.profile[c.dataset.pdone].done=c.checked;save();render();});
+  m.querySelectorAll("[data-usesug]").forEach(b=>b.onclick=()=>{S.profile[b.dataset.usesug].text=b.dataset.sug;save();render();});
+  m.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>copyText(S.profile[b.dataset.cp].text));
+};
+
+/* ---------- SIGNALS ---------- */
+const SIG=[{k:"icpViewers",n:"ICP profile views"},{k:"icpFollowers",n:"ICP followers"},{k:"inbound",n:"Inbound leads"},{k:"calls",n:"Booked calls"},{k:"pipeline",n:"Pipeline $"},{k:"impressions",n:"Impressions"}];
+function totals(){ const t={icpViewers:0,icpFollowers:0,inbound:0,calls:0,pipeline:0,impressions:0}; Object.values(S.weeks).forEach(w=>SIG.forEach(s=>t[s.k]+=Number(w[s.k])||0)); return t; }
+const money=n=>n>=1e6?"$"+(n/1e6).toFixed(n>=1e7?0:1)+"M":n>=1e3?"$"+Math.round(n/1e3)+"K":"$"+n;
+function vSignals(){
+  const t=totals(); const cw=Math.max(1,Math.min(13,weekNum(TODAY)));
+  return `<div class="view">
+  <div class="head"><div><span class="label">Step 4 + 7 · Fridays</span><h1>Friday signals</h1><p class="sub">Trust gets built while nobody's talking. Measure the people reading quietly: who viewed, who followed, who reached out, who booked.</p></div></div>
+  <div class="kpis">
+    <div class="kpi"><span class="label">Impressions</span><div class="n">${t.impressions.toLocaleString()}</div><span class="small muted">Looks good in a screenshot</span></div>
+    <div class="kpi"><span class="label">Inbound</span><div class="n">${t.inbound}</div><span class="small muted">Leads that reached out</span></div>
+    <div class="kpi star"><span class="label" style="color:var(--gold)">Booked calls</span><div class="n">${t.calls}</div><span class="small muted">The number that counts</span></div>
+    <div class="kpi"><span class="label">Pipeline</span><div class="n">${money(t.pipeline)}</div><span class="small muted">Total from those calls</span></div>
+  </div>
+  <div class="panel chartbox stack"><div class="row" style="justify-content:space-between"><h3>Calls vs. impressions, by week</h3><span class="small muted">Likes stay flat while trust climbs. Don't judge before week 6.</span></div>${chart()}</div>
+  <div class="panel stack"><h3>Weekly log</h3><p class="small muted">Each Friday: open LinkedIn's "Who viewed your profile" and new followers. Count only people who could buy from you.</p>
+  <div class="ledger-wrap"><table class="ledger"><thead><tr><th>Week</th>${SIG.map(s=>`<th>${s.n}</th>`).join("")}<th>Note</th></tr></thead><tbody>
+  ${[...Array(13)].map((_,i)=>{const w=i+1; const r=S.weeks[w]||{}; const fri=addDays(parseKey(S.startDate),i*7+4);
+    return `<tr class="${w===cw?"cur":""}"><td class="wk">W${w} · ${fmt(fri)}</td>${SIG.map(s=>`<td><input type="number" min="0" inputmode="numeric" data-w="${w}" data-s="${s.k}" value="${r[s.k]??""}" aria-label="Week ${w} ${s.n}"></td>`).join("")}<td><input type="text" data-w="${w}" data-s="note" value="${esc(r.note||"")}" aria-label="Week ${w} note" placeholder="Who stood out?"></td></tr>`;}).join("")}
+  </tbody></table></div></div></div>`;
+}
+function chart(){
+  const W=760,H=220,P={l:40,r:44,t:16,b:30}; const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const calls=[...Array(13)].map((_,i)=>Number((S.weeks[i+1]||{}).calls)||0);
+  let cum=0; const cumCalls=calls.map(c=>cum+=c);
+  const imp=[...Array(13)].map((_,i)=>Number((S.weeks[i+1]||{}).impressions)||0);
+  const maxC=Math.max(4,...cumCalls), maxI=Math.max(1,...imp);
+  const x=i=>P.l+i*(iw/12);
+  const yC=v=>P.t+ih-(v/maxC)*ih, yI=v=>P.t+ih-(v/maxI)*ih;
+  const any=calls.some(Boolean)||imp.some(Boolean);
+  const last=cumCalls.reduce((a,v,i)=>calls.slice(0,i+1).some(Boolean)||imp[i]?i:a,-1);
+  const ticks=[0,Math.round(maxC/2),maxC];
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative booked calls and weekly impressions by week">`;
+  ticks.forEach(t=>{s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${yC(t)}" y2="${yC(t)}" stroke="var(--line)" stroke-width="1"/><text x="${P.l-8}" y="${yC(t)+4}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">${t}</text>`;});
+  s+=`<line x1="${x(5.857)}" x2="${x(5.857)}" y1="${P.t}" y2="${P.t+ih}" stroke="var(--warn)" stroke-dasharray="3 4" stroke-width="1"/><text x="${x(5.857)+6}" y="${P.t+12}" font-size="11" fill="var(--warn)" font-family="IBM Plex Sans, sans-serif">week 6</text>`;
+  for(let i=0;i<13;i++) s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">W${i+1}</text>`;
+  if(!any){ s+=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif">Log your first Friday and the lines appear here.</text></svg>`; return s; }
+  const n=Math.max(0,last);
+  const pI=imp.slice(0,n+1).map((v,i)=>`${i?"L":"M"}${x(i)},${yI(v)}`).join("");
+  const pC=cumCalls.slice(0,n+1).map((v,i)=>`${i?"L":"M"}${x(i)},${yC(v)}`).join("");
+  s+=`<path d="${pI}" fill="none" stroke="var(--faint)" stroke-width="2"/>`;
+  s+=`<path d="${pC} L${x(n)},${P.t+ih} L${x(0)},${P.t+ih}Z" fill="var(--gold)" fill-opacity=".12"/><path d="${pC}" fill="none" stroke="var(--gold)" stroke-width="2.5"/>`;
+  s+=`<circle cx="${x(n)}" cy="${yC(cumCalls[n])}" r="4.5" fill="var(--gold)"/><text x="${x(n)+8}" y="${yC(cumCalls[n])-6}" font-size="12" font-weight="600" fill="var(--gold)" font-family="IBM Plex Sans, sans-serif">${cumCalls[n]} calls</text>`;
+  s+=`<text x="${x(n)+8}" y="${yI(imp[n])+14}" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif">impressions</text>`;
+  return s+`</svg>`;
+}
+bind.signals=m=>{
+  m.querySelectorAll("[data-w]").forEach(i=>{i.oninput=()=>{const w=i.dataset.w; S.weeks[w]=S.weeks[w]||{}; S.weeks[w][i.dataset.s]=i.dataset.s==="note"?i.value:(i.value===""?"":Number(i.value)); save();}; i.onchange=()=>{ if(i.dataset.s!=="note"){ const y=window.scrollY; render(); window.scrollTo(0,y);} };});
+};
+
+/* ---------- VOICE ---------- */
+function vVoice(){
+  return `<div class="view">
+  <div class="head"><div><span class="label">Used every Monday</span><h1>Voice file</h1><p class="sub">Buyers check whether you sound like an actual person they'd trust. Describe how you talk and what you never say. Every draft gets checked against the kill list.</p></div></div>
+  <div class="grid2">
+    <label class="panel field"><span class="label">How I talk</span><textarea id="vstyle" style="min-height:200px" placeholder="Direct, a bit dry. Short sentences. I use numbers from real deals. I say 'here's what we did' more than 'here's what you should do'. I swear on calls but not in writing.">${esc(S.voice.style)}</textarea></label>
+    <label class="panel field"><span class="label">Phrases I actually use</span><textarea id="vphr" style="min-height:200px" placeholder="One per line, pulled from your sales calls and voice notes.">${esc(S.voice.phrases)}</textarea></label>
+  </div>
+  <label class="panel field"><span class="label">Kill list · one per line · flagged in every draft</span><textarea id="vkill" style="min-height:180px;font-family:var(--mono);font-size:.88rem">${esc(S.voice.kill)}</textarea></label>
+  </div>`;
+}
+bind.voice=m=>{
+  m.querySelector("#vstyle").oninput=e=>{S.voice.style=e.target.value;save();};
+  m.querySelector("#vphr").oninput=e=>{S.voice.phrases=e.target.value;save();};
+  m.querySelector("#vkill").oninput=e=>{S.voice.kill=e.target.value;save();};
+};
+
+/* ---------- STRATEGY ---------- */
+function vStrategy(){
+  const rd=runDay(); const ph=rd<=14?0:rd<=42?1:2;
+  const s=parseKey(S.startDate);
+  const phases=[
+    {n:"Weeks 1–2 · Foundation",d:`${fmt(s)} – ${fmt(addDays(s,13))}`,items:["Score the 5 parts. Name your lowest.","Lock the one sentence and the 'that's the ___ person' tag.","Rebuild banner, headline, Featured and About as a landing page.","Pull objections from your last 10–20 sales calls into an idea bank.","Ship every post day, even if it's rough."]},
+    {n:"Weeks 3–6 · Consistency",d:`${fmt(addDays(s,14))} – ${fmt(addDays(s,41))}`,items:["Run the 2-hour week without skipping a Monday.","Lead with objections and client stories.","Likes will look flat. That's expected; judge by Friday signals.","Week 6 is where most founders quit. Don't."]},
+    {n:"Weeks 7–13 · Compounding",d:`${fmt(addDays(s,42))} – ${fmt(addDays(s,89))}`,items:["Re-score at day 30 and 60; shift focus to the new lowest.","Add opinion posts: pick a side people can quote.","Turn your best-performing objection into a lead magnet for Featured.","Day 90: judge by booked calls and pipeline, not impressions."]}
+  ];
+  const rules=[
+    ["Get known for one sentence.","Post around one problem for one ICP. Leadership on Monday, AI on Tuesday and a book on Wednesday means nobody can finish the sentence about you."],
+    ["Every post does one of 5 jobs.","Objections, client stories, trend takes, your process, opinions. If a post does none, cut it."],
+    ["Never write from a blank page.","Voice notes on Monday become the week. The kill list keeps it sounding like you."],
+    ["Spend 12 minutes after each post.","Reply to every comment in the first hour, then comment on a few ICP posts. That's where visibility comes from."],
+    ["Measure the quiet readers.","Every Friday, read the titles of who viewed and who followed. If they could buy from you, it's working."],
+    ["Give curiosity somewhere to go.","A profile built like a landing page turns a click on your name into a DM, a download or a call."],
+    ["Don't judge before day 90.","Trust compounds in the background. Booked calls are the number that counts."]
+  ];
+  const cut=["Writing every post from a blank page","Testing posting times and algorithm hacks","Chasing viral posts outside your ICP","Checking likes an hour after posting","Posting more than 7 times a week","Rewriting drafts until they sound like AI"];
+  return `<div class="view">
+  <div class="head"><div><span class="label">The plan</span><h1>90-day authority strategy</h1><p class="sub">${S.pos.icp&&S.pos.problem?`Become the person ${esc(S.pos.icp)} think of first for ${esc(S.pos.problem)}.`:"Become the person your ICP thinks of first for one problem. Write your sentence in Audit & position to make this plan yours."}</p></div></div>
+  <div class="phases">${phases.map((p,i)=>`<div class="phase ${i===ph&&rd>=1&&rd<=90?"now":""}"><span class="label">${p.d}${i===ph&&rd>=1&&rd<=90?" · you are here":""}</span><h3>${p.n}</h3><ul>${p.items.map(x=>`<li>${x}</li>`).join("")}</ul></div>`).join("")}</div>
+  <div class="grid2">
+    <div class="panel"><h3 style="margin-bottom:6px">The rules</h3>${rules.map((r,i)=>`<div class="rule"><span class="n">${pad(i+1)}</span><div><b>${r[0]}</b><p class="small muted">${r[1]}</p></div></div>`).join("")}</div>
+    <div class="stack">
+      <div class="panel stack"><h3>Where the 2 hours go</h3>
+        <div class="row" style="justify-content:space-between"><span>Monday voice notes</span><span class="mono">30 min</span></div>
+        <div class="row" style="justify-content:space-between"><span>Monday drafting</span><span class="mono">30 min</span></div>
+        <div class="row" style="justify-content:space-between"><span>Engagement, ${S.postDays.length} post days × 12</span><span class="mono">${S.postDays.length*12} min</span></div>
+        <div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><b>Total</b><b class="mono">${Math.floor((60+S.postDays.length*12)/60)}h ${(60+S.postDays.length*12)%60}m</b></div>
+      </div>
+      <div class="panel stack"><h3>What you can cut</h3>${cut.map(c=>`<span class="small muted" style="text-decoration:line-through">${c}</span>`).join("")}</div>
+    </div>
+  </div></div>`;
+}
+
+/* ---------- boot ---------- */
+function loadLocal(){ try{ const r=localStorage.getItem("aos.state"); if(r) S=merge(blankState(),JSON.parse(r)); }catch(e){} }
+document.addEventListener("keydown",e=>{
+  if(e.target.closest("input,textarea,select")||e.metaKey||e.ctrlKey||e.altKey||document.querySelector("#drawer .drawer")) return;
+  const v=VIEWS.find(v=>v.k===e.key.toUpperCase()); if(v) go(v.id);
+});
+loadLocal(); renderNav(); render(); setSync("Saved in this browser");
+
+(async()=>{
+  try{
+    const c=window.claude; if(!c||!c.use) return;
+    c.use("sample").then(s=>{ if(s){ sample=s; if(view==="batch") render(); } });
+    c.use("downloads").then(d=>{ downloads=d; });
+    const d=await c.use("db"); if(!d) return;
+    db=d; docRef=db.doc("app/state"); mode="db"; setSync("Connecting…");
+    let first=true;
+    docRef.onSnapshot(snap=>{
+      if(snap.metadata.hasPendingWrites) return;
+      if(!snap.exists){ if(first){ first=false; setSync("Ready"); save(); } return; }
+      if(dirty||writing) return;
+      if(document.activeElement&&document.activeElement.closest("input,textarea")&&!first) return;
+      S=merge(blankState(),snap.data()); first=false;
+      setSync("Saved to your account");
+      if(!document.querySelector("#drawer .drawer")){ renderNav(); render(); }
+    },()=>{ mode="local"; setSync("Saved in this browser"); });
+  }catch(e){}
+})();
+})();
+</script>
+
+</body>
+</html>
